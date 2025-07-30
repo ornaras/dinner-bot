@@ -10,6 +10,7 @@ public class PollingService(ITelegramBotClient botClient,  IUpdateHandler update
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Запуск Telegram-бота...");
+        Handlers.Commands.BotClient = botClient;
         while (!stoppingToken.IsCancellationRequested)
         {
             try

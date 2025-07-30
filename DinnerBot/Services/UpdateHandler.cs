@@ -20,6 +20,29 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        
+        await (update switch
+        {
+            { Message: { } msg } => OnMessage(msg),
+            _ => Task.CompletedTask
+        });
+    }
+
+    private Task OnMessage(Message msg)
+    {
+        if (!string.IsNullOrWhiteSpace(msg.Text))
+        {
+            if (msg.Text.StartsWith('/'))
+                return OnCommand(msg);
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task OnCommand(Message msg)
+    {
+        var args = msg.Text![1..].Split(' ');
+        await (args[0] switch
+        {
+            "start" => Commands.StartCommand(msg.Chat.Id)
+        });
     }
 }
