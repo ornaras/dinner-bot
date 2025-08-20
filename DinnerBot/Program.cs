@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddEnvFile(".env", false);
 
 builder.Services.AddSingleton<CafeteriaExchanger>();
 builder.Services.AddSingleton<CacheService>();
