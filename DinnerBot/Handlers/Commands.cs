@@ -21,4 +21,10 @@ public static class Commands
     {
         await BotClient.SendMessage(chat, "Вы переведены в главное меню", replyMarkup: Keyboards.kbStart);
     }
+
+    public static async Task InvalidCommand(ChatId chat, string command, ILogger logger)
+    {
+        logger.LogDebug("В чате {chat} ввели неизвестную команду \"{command}\"", chat.Identifier, command);
+        await BotClient.SendMessage(chat, "Неизвестная команда");
+    }
 }

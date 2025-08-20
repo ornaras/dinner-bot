@@ -65,7 +65,8 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
         var args = msg.Text![1..].Split(' ');
         await (args[0] switch
         {
-            "start" => Commands.StartCommand(msg.Chat.Id)
+            "start" => Commands.StartCommand(msg.Chat),
+            _ => Commands.InvalidCommand(msg.Chat, msg.Text, logger),
         });
     }
 }
