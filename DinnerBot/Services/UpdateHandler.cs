@@ -1,18 +1,21 @@
+using DinnerBot.Constants;
+using DinnerBot.Handlers;
+using DinnerBot.Models;
+using System;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace DinnerBot.Services;
 
-public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IUpdateHandler
+public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger, CafeteriaExchanger cafe) : IUpdateHandler
 {
-    private static readonly InputPollOption[] PollOptions = ["Hello", "World!"];
-
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
     {
         logger.LogInformation("HandleError: {Exception}", exception);
-        // Cooldown in case of network connection error
         if (exception is RequestException)
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
     }
@@ -27,14 +30,37 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
         });
     }
 
-    private Task OnMessage(Message msg)
+    private async Task OnMessage(Message msg)
     {
         if (!string.IsNullOrWhiteSpace(msg.Text))
         {
             if (msg.Text.StartsWith('/'))
-                return OnCommand(msg);
+                await OnCommand(msg);
+            else
+            {
+                if (msg.Text == "Открыть каталог")
+                {
+                    var catalog = await cafe.OpenCatalog();
+                    foreach(var category in catalog)
+                    {
+                        var images = new IAlbumInputMedia[category.Plates.Count];
+                        for (var i = 0; i < images.Length; i++)
+                            images[i] = new InputMediaPhoto(InputFile.FromString(category.Plates[i].PictureUrl));
+                        foreach (var chunk in images.Chunk(9))
+                            await bot.SendMediaGroup(msg.Chat, chunk);
+
+                        var builder = new StringBuilder();
+                        builder.AppendLine($"Категория \"<b>{category.Name}</b>\":");
+                        for(var i = 1; i <= category.Plates.Count; i++)
+                        {
+                            var plate = category.Plates[i - 1];
+                            builder.AppendLine($"{i}) <code>{plate.Name}</code> <b>[{plate.Price} руб. | {plate.Mass}]</b>");
+                        }
+                        await bot.SendMessage(msg.Chat, builder.ToString(), ParseMode.Html, replyMarkup: Keyboards.GenerateCategoryKeyboard(category));
+                    }
+                }
+            }
         }
-        return Task.CompletedTask;
     }
 
     private async Task OnCommand(Message msg)
