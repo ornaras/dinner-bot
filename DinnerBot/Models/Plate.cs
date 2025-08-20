@@ -2,7 +2,7 @@
 
 namespace DinnerBot.Models
 {
-    internal readonly struct Plate(JsonNode src)
+    public readonly struct Plate(JsonNode src)
     {
         public int Id { get; } = src["id"].GetValue<int>();
         public int CategoryId { get; } = int.Parse(src["categoryID"].GetValue<string>());

@@ -1,7 +1,5 @@
 using DinnerBot.Constants;
 using DinnerBot.Handlers;
-using DinnerBot.Models;
-using System;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -11,7 +9,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace DinnerBot.Services;
 
-public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger, CafeteriaExchanger cafe) : IUpdateHandler
+public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger, CacheService cache) : IUpdateHandler
 {
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
     {
@@ -40,8 +38,7 @@ public class UpdateHandler(ITelegramBotClient bot, ILogger<UpdateHandler> logger
             {
                 if (msg.Text == "Открыть каталог")
                 {
-                    var catalog = await cafe.OpenCatalog();
-                    foreach(var category in catalog)
+                    foreach (var category in await cache.Categories.GetValue())
                     {
                         var images = new IAlbumInputMedia[category.Plates.Count];
                         for (var i = 0; i < images.Length; i++)

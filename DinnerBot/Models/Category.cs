@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace DinnerBot.Models
 {
-    internal readonly struct Category(JsonNode src, IEnumerable<Plate> plates)
+    public readonly struct Category(JsonNode src, IEnumerable<Plate> plates)
     {
         public int Id { get; } = int.Parse(src["id"].GetValue<string>());
         public string Name { get; } = src["name"].GetValue<string>();
